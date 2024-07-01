@@ -1,78 +1,55 @@
 import nmap
 import ftplib
+import argparse
 
-def scan_target(target_ip):
+
+def scan_target(ip_address):
     nm = nmap.PortScanner()
-    nm.scan(target_ip, arguments='-sV')
+    nm.scan(ip_address, arguments='-p- -sV')  # Scan all ports and get version info
 
-    report = {
-        'target_ip': target_ip,
-        'open_ports': [],
-        'version_info': []
-    }
+    open_ports = []
+    versions = {}
 
+    # Organize open ports and their versions
     for host in nm.all_hosts():
         for proto in nm[host].all_protocols():
-            ports = nm[host][proto].keys()
-            for port in ports:
-                service_info = nm[host][proto][port]
-                report['open_ports'].append({
-                    'port': port,
-                    'protocol': proto,
-                    'state': service_info['state'],
-                    'name': service_info['name']
-                })
-                if 'version' in service_info and service_info['version']:
-                    report['version_info'].append({
-                        'port': port,
-                        'service': service_info['name'],
-                        'version': service_info['version']
-                    })
+            lport = nm[host][proto].keys()
+            for port in lport:
+                if nm[host][proto][port]['state'] == 'open':
+                    open_ports.append(port)
+                    versions[port] = nm[host][proto][port]['version']
 
-    return report
+    # Print organized output of open ports and their versions
+    print(f"Open ports on {ip_address}:")
+    for port in open_ports:
+        print(f"    Port {port}: {versions[port]}")
 
-def check_ftp_anonymous(target_ip):
-    try:
-        ftp = ftplib.FTP(target_ip)
-        ftp.login()
-        ftp.cwd('/')
+    # Check for FTP and handle anonymous login
+    if 21 in open_ports:
+        try:
+            ftp = ftplib.FTP(ip_address)
+            ftp.login("anonymous", "guest@example.com")
+            print("\nFTP anonymous login successful.")
+            filename = "sample_file.txt"
+            with open(filename, 'w') as file:
+                file.write("This is a sample file created by the script.")
+            ftp.storbinary(f"STOR /users/{filename}", open(filename, 'rb'))
+            print(f"Sample file '{filename}' uploaded to /users/ directory.")
+            ftp.quit()
+        except Exception as e:
+            print(f"FTP error: {str(e)}")
+    else:
+        print("\nFTP port (21) is not open or not found.")
 
-        sample_file_content = 'This is a sample file.'
-        sample_file_name = 'sample_file.txt'
-        
-        with open(sample_file_name, 'w') as f:
-            f.write(sample_file_content)
 
-        with open(sample_file_name, 'rb') as f:
-            ftp.storbinary(f'STOR {sample_file_name}', f)
+def main():
+    parser = argparse.ArgumentParser(
+        description="Scan a target IP for open ports, version info, and interact with FTP.")
+    parser.add_argument("ip_address", type=str, help="Target IP address to scan")
+    args = parser.parse_args()
 
-        ftp.quit()
-        return True
+    scan_target(args.ip_address)
 
-    except ftplib.all_errors as e:
-        print(f'FTP error: {e}')
-        return False
-
-def main(target_ip):
-    scan_report = scan_target(target_ip)
-
-    print(f"Scan report for {target_ip}:")
-    print("Open Ports:")
-    for port_info in scan_report['open_ports']:
-        print(f"  - Port {port_info['port']}/{port_info['protocol']}: {port_info['state']} ({port_info['name']})")
-
-    print("\nVersion Information:")
-    for version_info in scan_report['version_info']:
-        print(f"  - Port {version_info['port']}: {version_info['service']} {version_info['version']}")
-
-    ftp_open = any(port_info['name'] == 'ftp' for port_info in scan_report['open_ports'])
-    if ftp_open:
-        print("\nChecking for anonymous FTP access...")
-        if check_ftp_anonymous(target_ip):
-            print("Anonymous FTP access allowed. Sample file uploaded.")
-        else:
-            print("Anonymous FTP access not allowed or error occurred.")
 
 if __name__ == "__main__":
-    target_ip = input("Enter the target IP: ")
-    main(target_ip)
+    main()
