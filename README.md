@@ -118,14 +118,8 @@ if __name__ == "__main__":
 
 If you want to contribute to this project, please fork the repository and create a pull request with your changes. Ensure your code adheres to the project's coding standards and passes all tests.
 
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Contact
 
-For any questions or issues, please open an issue on this repository or contact [yourname](mailto:youremail@example.com).
+For any questions or issues, please open an issue on this repository or contact [yourname](mailto:tabiex.sec@gmail.com).
 
-```
-
-Replace `yourusername`, `yourname`, and `youremail@example.com` with your actual GitHub username, name, and email address. This documentation covers installation, usage, a detailed script explanation, and other relevant information, providing a comprehensive guide for users of your tool.
