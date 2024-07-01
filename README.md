@@ -1,8 +1,4 @@
 # nmap-clean_port_scanner
-Certainly! Below is a detailed documentation in Markdown format for your tool, which you can use for your repository's README file.
-
-
-# Nmap Scan and FTP Interaction Tool
 
 ## Overview
 
